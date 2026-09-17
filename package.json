@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "sync": "tsx src/index.ts"
+    "sync": "bun src/index.ts",
+    "backfill": "bun run src/index.ts backfill"
   },
   "devDependencies": {
     "@types/bun": "latest",

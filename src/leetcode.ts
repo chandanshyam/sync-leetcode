@@ -1,7 +1,5 @@
 const ENDPOINT = "https://leetcode.com/graphql";
 
-console.log(await recentAccepted(process.env.LEETCODE_USERNAME!));
-
 function headers() {
   const session = process.env.LEETCODE_SESSION;
   const csrf = process.env.LEETCODE_CSRF;
@@ -82,4 +80,34 @@ export async function questionInfo(slug: string): Promise<QuestionInfo> {
   }`;
   const data = await gql<{ question: QuestionInfo }>(query, { s: slug });
   return data.question;
+}
+
+export interface SubmissionListItem {
+  id: string;
+  title: string;
+  titleSlug: string;
+  statusDisplay: string;
+  lang: string;
+  timestamp: string;
+}
+
+export interface SubmissionListPage {
+  lastKey: string | null;
+  hasNext: boolean;
+  submissions: SubmissionListItem[];
+}
+
+export async function submissionsPage(
+  offset: number,
+  limit: number,
+  lastKey: string | null,
+): Promise<SubmissionListPage> {
+  const query = `query ($offset: Int!, $limit: Int!, $lastKey: String) {
+    submissionList(offset: $offset, limit: $limit, lastKey: $lastKey) {
+      lastKey hasNext
+      submissions { id title titleSlug statusDisplay lang timestamp }
+    }
+  }`;
+  const data = await gql<{ submissionList: SubmissionListPage }>(query, { offset, limit, lastKey });
+  return data.submissionList;
 }
