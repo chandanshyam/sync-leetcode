@@ -66,6 +66,3 @@ export function wrapAsComment(text: string, langName: string): string {
   const lines = body.split("\n").map((l) => (l ? p + l : p.trimEnd()));
   return lines.join("\n") + "\n\n";
 }
-
-console.log(wrapAsComment(htmlToText("<p>Return the <code>sum</code>.</p>"), "python3"));
-console.log(wrapAsComment(htmlToText("<p>Return the <code>sum</code>.</p>"), "typescript"));
