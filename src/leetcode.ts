@@ -38,7 +38,7 @@ export interface RecentSubmission {
   lang: string;
 }
 
-export async function recentAccepted(username: string, limit = 20): Promise<RecentSubmission[]> {
+export async function recentAccepted(username: string, limit = 50): Promise<RecentSubmission[]> {
   const query = `query ($u: String!, $n: Int) {
     recentAcSubmissionList(username: $u, limit: $n) {
       id title titleSlug timestamp lang
