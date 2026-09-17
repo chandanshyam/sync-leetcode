@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "sync": "bun src/index.ts",
-    "backfill": "bun run src/index.ts backfill"
+    "backfill": "bun src/index.ts backfill"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -4,13 +4,13 @@ import { upsertFile, readJsonFile } from "./github";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function difficultyFolder(d: string): string {
+export function difficultyFolder(d: string): string {
   const map: Record<string, string> = { Easy: "easy", Medium: "medium", Hard: "hard" };
   return map[d] ?? "other";
 }
 
 // Build the full file: problem statement as a comment, then the solution code.
-function buildFile(slug: string, info: QuestionInfo, detail: SubmissionDetail): string {
+export function buildFile(slug: string, info: QuestionInfo, detail: SubmissionDetail): string {
   const statement = [
     `${info.questionFrontendId}. ${info.title}   [${info.difficulty}]`,
     `https://leetcode.com/problems/${slug}/`,

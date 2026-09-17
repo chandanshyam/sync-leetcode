@@ -1,0 +1,23 @@
+name: Sync LeetCode
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 8 * * *" # daily at 08:00 UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun run sync
+        env:
+          LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
+          LEETCODE_CSRF: ${{ secrets.LEETCODE_CSRF }}
+          LEETCODE_USERNAME: ${{ secrets.LEETCODE_USERNAME }}
+          GH_REPO: ${{ secrets.GH_REPO }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
