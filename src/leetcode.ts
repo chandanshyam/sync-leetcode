@@ -61,7 +61,13 @@ export async function submissionCode(id: string): Promise<SubmissionDetail> {
       code runtimeDisplay memoryDisplay lang { name }
     }
   }`;
-  const data = await gql<{ submissionDetails: SubmissionDetail }>(query, { id: Number(id) });
+  const data = await gql<{ submissionDetails: SubmissionDetail | null }>(query, { id: Number(id) });
+  // LeetCode returns null (not an error) when the session cookie is expired or invalid.
+  if (!data.submissionDetails) {
+    throw new Error(
+      `No details for submission ${id}: LEETCODE_SESSION/LEETCODE_CSRF are likely expired. Refresh them from your browser cookies.`,
+    );
+  }
   return data.submissionDetails;
 }
 
@@ -78,7 +84,8 @@ export async function questionInfo(slug: string): Promise<QuestionInfo> {
       questionFrontendId title difficulty content
     }
   }`;
-  const data = await gql<{ question: QuestionInfo }>(query, { s: slug });
+  const data = await gql<{ question: QuestionInfo | null }>(query, { s: slug });
+  if (!data.question) throw new Error(`No question found for slug "${slug}"`);
   return data.question;
 }
 
