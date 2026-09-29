@@ -5,11 +5,14 @@
   "private": true,
   "scripts": {
     "sync": "bun src/index.ts",
-    "backfill": "bun src/index.ts backfill"
+    "backfill": "bun src/index.ts backfill",
+    "build:ext": "bun build extension/src/background.js --outfile extension/background.js --target browser --format esm"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/turndown": "^5.0.6"
+    "@types/libsodium-wrappers": "^0.8.2",
+    "@types/turndown": "^5.0.6",
+    "libsodium-wrappers": "^0.8.4"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -17,5 +20,4 @@
   "dependencies": {
     "turndown": "^7.2.4"
   }
-
 }
