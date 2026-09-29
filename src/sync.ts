@@ -1,6 +1,7 @@
 import { recentAccepted, submissionCode, questionInfo, type QuestionInfo, type SubmissionDetail } from "./leetcode";
 import { htmlToText, wrapAsComment, extFor } from "./format";
 import { upsertFile, readJsonFile } from "./github";
+import { syncProjects } from "./projects";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -50,6 +51,8 @@ export async function run(): Promise<void> {
     await sleep(600); // stay under LeetCode's rate limiter
   }
 
+  changed += await syncProjects(GH_REPO, GH_TOKEN, synced, false);
+
   if (changed > 0) {
     await upsertFile(
       GH_REPO,
@@ -58,4 +61,5 @@ export async function run(): Promise<void> {
       JSON.stringify(synced, null, 2) + "\n",
       `Update sync state (${changed} new)`,
     );
-  }}
+  }
+}
