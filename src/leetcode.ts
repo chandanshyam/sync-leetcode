@@ -30,6 +30,28 @@ async function gql<T>(query: string, variables: Record<string, unknown> = {}): P
   return json.data as T;
 }
 
+// Throws if the session is signed out; otherwise returns days until the
+// LEETCODE_SESSION JWT expires (Infinity if the token has no readable expiry).
+export async function checkAuth(): Promise<{ username: string; daysLeft: number }> {
+  const { userStatus } = await gql<{ userStatus: { isSignedIn: boolean; username: string } }>(
+    `query { userStatus { isSignedIn username } }`,
+  );
+  if (!userStatus.isSignedIn) throw new Error("LEETCODE_SESSION/LEETCODE_CSRF are expired or invalid");
+
+  const expected = process.env.LEETCODE_USERNAME;
+  if (expected && userStatus.username.toLowerCase() !== expected.toLowerCase()) {
+    throw new Error(`Session belongs to "${userStatus.username}", expected "${expected}"`);
+  }
+
+  let daysLeft = Infinity;
+  try {
+    const payload = JSON.parse(atob(process.env.LEETCODE_SESSION!.split(".")[1]!.replace(/-/g, "+").replace(/_/g, "/")));
+    const exp = Number(payload.expired_time_ ?? payload.exp);
+    if (exp) daysLeft = (exp * 1000 - Date.now()) / 86_400_000;
+  } catch {}
+  return { username: userStatus.username, daysLeft };
+}
+
 export interface RecentSubmission {
   id: string;
   title: string;
@@ -117,4 +139,68 @@ export async function submissionsPage(
   }`;
   const data = await gql<{ submissionList: SubmissionListPage }>(query, { offset, limit, lastKey });
   return data.submissionList;
+}
+// ---- Projects (leetcode.com/project) ----
+
+export interface ProjectSubmission {
+  id: string;
+  problemSlug: string;
+  status: string; // SUCCESS | FAILURE | PENDING | RUNNING
+  createdAt: string;
+  reportAvailable: boolean;
+}
+
+export interface ProjectSubmissionPage {
+  hasMore: boolean;
+  nodes: ProjectSubmission[];
+}
+
+export async function projectSubmissionsPage(skip: number, limit: number): Promise<ProjectSubmissionPage> {
+  const query = `query ($skip: Int, $limit: Int) {
+    projectSubmissionList(skip: $skip, limit: $limit) {
+      hasMore
+      nodes { id problemSlug status createdAt reportAvailable }
+    }
+  }`;
+  const data = await gql<{ projectSubmissionList: ProjectSubmissionPage | null }>(query, { skip, limit });
+  return data.projectSubmissionList ?? { hasMore: false, nodes: [] };
+}
+
+export interface ProjectDetail {
+  slug: string;
+  title: string;
+  difficulty: string; // INTERMEDIATE | ADVANCED | EXPERT
+  summary: string;
+  description: string;
+  languages: string[];
+}
+
+export async function projectDetail(slug: string): Promise<ProjectDetail> {
+  const query = `query ($s: String!) {
+    projectProblemDetail(problemSlug: $s) { slug title difficulty summary description languages }
+  }`;
+  const data = await gql<{ projectProblemDetail: ProjectDetail | null }>(query, { s: slug });
+  if (!data.projectProblemDetail) throw new Error(`No project found for slug "${slug}"`);
+  return data.projectProblemDetail;
+}
+
+// Parsed subset of the reportJson blob the report page renders.
+export interface ProjectReport {
+  submittedAt: string;
+  submission?: { files: { path: string; kind: string; language?: string; content: string }[] };
+  tests: { status: string; passed: number; total: number };
+  analysis: Record<string, { status: string; rating?: string; contentMarkdown?: string }>;
+}
+
+// Returns null while the report is still being generated.
+export async function projectReport(slug: string, id: string): Promise<ProjectReport | null> {
+  const query = `query ($s: String!, $id: ID!) {
+    projectSubmissionReport(problemSlug: $s, id: $id) { status errorMessage reportJson }
+  }`;
+  const data = await gql<{
+    projectSubmissionReport: { status: string; errorMessage: string | null; reportJson: string | null } | null;
+  }>(query, { s: slug, id });
+  const r = data.projectSubmissionReport;
+  if (!r?.reportJson) return null;
+  return JSON.parse(r.reportJson) as ProjectReport;
 }

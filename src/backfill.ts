@@ -2,6 +2,7 @@ import { submissionsPage, submissionCode, questionInfo } from "./leetcode";
 import { upsertFile, readJsonFile } from "./github";
 import { buildFile, difficultyFolder } from "./sync";
 import { extFor } from "./format";
+import { syncProjects } from "./projects";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const PAGE = 20;
@@ -48,6 +49,8 @@ export async function backfill(): Promise<void> {
     offset += PAGE;
     await sleep(800); // gentle between pages
   }
+
+  changed += await syncProjects(GH_REPO, GH_TOKEN, synced, true);
 
   if (changed > 0) {
     await upsertFile(GH_REPO, GH_TOKEN, "synced.json",

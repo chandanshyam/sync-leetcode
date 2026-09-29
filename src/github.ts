@@ -43,6 +43,46 @@ export async function upsertFile(
   }
 }
 
+async function gh<T = any>(token: string, method: string, url: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API}${url}`, {
+    method,
+    headers: { ...ghHeaders(token), "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`GitHub ${method} ${url} failed: ${res.status} ${await res.text()}`);
+  return res.json() as Promise<T>;
+}
+
+// Write many files in a single commit. Files already under `replaceDir` that
+// aren't in `files` are deleted, so the folder mirrors the latest submission.
+export async function commitFiles(
+  repo: string,
+  token: string,
+  files: { path: string; content: string }[],
+  message: string,
+  replaceDir?: string,
+): Promise<void> {
+  const { default_branch: branch } = await gh(token, "GET", `/repos/${repo}`);
+  const ref = await gh(token, "GET", `/repos/${repo}/git/ref/heads/${branch}`);
+  const head = await gh(token, "GET", `/repos/${repo}/git/commits/${ref.object.sha}`);
+
+  const entries: object[] = files.map((f) => ({ path: f.path, mode: "100644", type: "blob", content: f.content }));
+
+  if (replaceDir) {
+    const keep = new Set(files.map((f) => f.path));
+    const tree = await gh(token, "GET", `/repos/${repo}/git/trees/${head.tree.sha}?recursive=1`);
+    for (const e of tree.tree) {
+      if (e.type === "blob" && e.path.startsWith(`${replaceDir}/`) && !keep.has(e.path)) {
+        entries.push({ path: e.path, mode: e.mode, type: "blob", sha: null });
+      }
+    }
+  }
+
+  const tree = await gh(token, "POST", `/repos/${repo}/git/trees`, { base_tree: head.tree.sha, tree: entries });
+  const commit = await gh(token, "POST", `/repos/${repo}/git/commits`, { message, tree: tree.sha, parents: [head.sha] });
+  await gh(token, "PATCH", `/repos/${repo}/git/refs/heads/${branch}`, { sha: commit.sha });
+}
+
 // Read a JSON file from the repo, returning {} if it does not exist yet.
 export async function readJsonFile<T = Record<string, string>>(
   repo: string,
