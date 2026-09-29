@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        width: 320px;
+        margin: 0;
+        padding: 14px 16px;
+        font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      h1 { font-size: 14px; margin: 0 0 10px; }
+      label { display: block; margin: 8px 0 2px; font-weight: 600; }
+      input[type="text"], input[type="password"] {
+        width: 100%; box-sizing: border-box; padding: 6px 8px;
+        border: 1px solid #8884; border-radius: 6px; font: inherit;
+      }
+      .row { display: flex; gap: 8px; }
+      .row > div { flex: 1; }
+      .checkbox { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-weight: 600; }
+      button {
+        margin-top: 12px; width: 100%; padding: 8px; border: 0; border-radius: 6px;
+        background: #2563eb; color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+      }
+      button:disabled { opacity: .5; cursor: default; }
+      button.secondary { background: #6b7280; margin-top: 6px; }
+      #status { margin-top: 12px; padding: 8px; border-radius: 6px; background: #8881; white-space: pre-wrap; }
+      .ok { color: #16a34a; } .err { color: #dc2626; } .muted { opacity: .7; }
+      .pill { display:inline-block; padding:1px 6px; border-radius:999px; font-size:11px; background:#8882; }
+    </style>
+  </head>
+  <body>
+    <h1>LeetCode → GitHub Secrets</h1>
+
+    <label for="token">GitHub token <span class="muted">(Secrets: write)</span></label>
+    <input id="token" type="password" placeholder="github_pat_… or ghp_…" autocomplete="off" />
+
+    <div class="row">
+      <div>
+        <label for="owner">Owner</label>
+        <input id="owner" type="text" placeholder="your-user" autocomplete="off" />
+      </div>
+      <div>
+        <label for="repo">Repo</label>
+        <input id="repo" type="text" placeholder="sync-leetcode" autocomplete="off" />
+      </div>
+    </div>
+
+    <label class="checkbox"><input id="auto" type="checkbox" /> Auto-push when I log in</label>
+
+    <button id="save" class="secondary">Save settings</button>
+    <button id="push">Push session now</button>
+
+    <div id="status" class="muted">Loading…</div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

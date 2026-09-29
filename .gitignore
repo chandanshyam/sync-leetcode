@@ -6,6 +6,9 @@ out
 dist
 *.tgz
 
+# built chrome extension bundle (regenerate with `bun run build:ext`)
+extension/background.js
+
 # code coverage
 coverage
 *.lcov
